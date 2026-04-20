@@ -4,4 +4,5 @@ export { Container } from './Container';
 export { SectionTitle } from './SectionTitle';
 export { Card } from './Card';
 export { Status } from './Status';
+export { Skeleton, PageSkeleton } from './Skeleton';
 export { cn } from './cn';

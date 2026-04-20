@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { bookingsApi } from '../api/bookings';
 import type { Slot } from '../api/types';
 import { ApiError } from '../api/client';
-import { Card, Container, SectionTitle, Status } from '../components/ui';
+import { Card, Container, SectionTitle, Skeleton, Status } from '../components/ui';
 import { BookingCalendar, BookingForm, TimeList } from '../components/booking';
 import { clinicDateKey, clinicLongDate, localDateKey } from '../lib/clinic-tz';
 
@@ -87,7 +87,27 @@ export default function Booking() {
         subtitle="после заявки психолог подтвердит запись — вы получите письмо с деталями."
       />
 
-      {slotsQuery.isLoading && <p className="text-[var(--color-muted)]">загружаем расписание…</p>}
+      {slotsQuery.isLoading && (
+        <div
+          aria-busy="true"
+          aria-live="polite"
+          className="grid gap-8 md:grid-cols-[auto_1fr] items-start"
+        >
+          <Skeleton variant="block" className="h-[320px] w-full md:w-[340px]" />
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-6 w-48" />
+            <div className="grid grid-cols-3 gap-2">
+              <Skeleton variant="block" className="h-11" />
+              <Skeleton variant="block" className="h-11" />
+              <Skeleton variant="block" className="h-11" />
+              <Skeleton variant="block" className="h-11" />
+              <Skeleton variant="block" className="h-11" />
+              <Skeleton variant="block" className="h-11" />
+            </div>
+            <Skeleton variant="block" className="h-32 mt-3" />
+          </div>
+        </div>
+      )}
       {slotsQuery.isError && (
         <Status kind="error">Не удалось загрузить расписание. Попробуйте обновить страницу.</Status>
       )}

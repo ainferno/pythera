@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '../../api/admin';
 import { bookingsApi } from '../../api/bookings';
-import { Button, Container, SectionTitle, Status, cn } from '../../components/ui';
+import { Button, Container, SectionTitle, Skeleton, Status, cn } from '../../components/ui';
 import { clinicLongDate, clinicTime } from '../../lib/clinic-tz';
 import type { BookingStatus } from '../../api/types';
 
@@ -96,7 +96,17 @@ export default function AdminDashboard() {
         ))}
       </nav>
 
-      {list.isLoading && <p className="text-[var(--color-muted)]">загрузка…</p>}
+      {list.isLoading && (
+        <div
+          aria-busy="true"
+          aria-live="polite"
+          className="border border-[var(--color-line)] rounded-2xl bg-[var(--color-surface)] p-4 flex flex-col gap-3"
+        >
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="h-4 w-3/5" />
+        </div>
+      )}
 
       {!list.isLoading && rows.length === 0 && (
         <p className="text-[var(--color-muted)]">В этом статусе пусто.</p>

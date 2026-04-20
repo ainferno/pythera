@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { bookingsApi } from '../api/bookings';
 import { useAuth } from '../hooks/useAuth';
 import type { Booking } from '../api/types';
-import { Button, Card, Container, SectionTitle, Status, cn } from '../components/ui';
+import { Button, Card, Container, SectionTitle, Skeleton, Status, cn } from '../components/ui';
 import { clinicLongDate, clinicTime } from '../lib/clinic-tz';
 
 const statusLabel: Record<Booking['status'], string> = {
@@ -67,7 +67,12 @@ export default function Profile() {
         </Status>
       )}
 
-      {list.isLoading && <p className="text-[var(--color-muted)]">загрузка…</p>}
+      {list.isLoading && (
+        <div aria-busy="true" aria-live="polite" className="flex flex-col gap-3">
+          <Skeleton variant="block" className="h-24" />
+          <Skeleton variant="block" className="h-24" />
+        </div>
+      )}
 
       {!list.isLoading && (upcoming.length ?? 0) === 0 && (past.length ?? 0) === 0 && (
         <Card className="flex flex-col gap-3 items-start">

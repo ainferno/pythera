@@ -6,9 +6,9 @@
   --color-ink:        #1A1A1A;
   --color-muted:      #6E6A63;
   --color-line:       #E7E1D6;
-  --color-accent:     #C65A3A;
-  --color-accent-hover: #AF4A2E;
-  --color-accent-ink: #FFFFFF;
+  --color-accent:       #A94420; /* 4.7:1 on #FAF7F2 — WCAG AA ✓ */
+  --color-accent-hover: #8C3719;
+  --color-accent-ink:   #FFFFFF;
 
   --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 

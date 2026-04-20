@@ -42,3 +42,7 @@ docker-compose.override.yml
 
 # Local-only planning doc
 PLAN.md
+
+# Lighthouse reports
+/frontend/lighthouse-*.json
+/frontend/lighthouse-*.html
