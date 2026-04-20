@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/auth';
 import { useAuth } from '../hooks/useAuth';
-import { Button, Card, Container } from '../components/ui';
+import { Button, Card, Container, Status } from '../components/ui';
 
 export default function Register() {
   const { login } = useAuth();
@@ -88,7 +88,7 @@ export default function Register() {
             />
           </label>
 
-          {err && <div className="text-sm text-[var(--color-accent)]">{err}</div>}
+          {err && <Status kind="error" onClose={() => setErr(null)}>{err}</Status>}
 
           <Button disabled={busy}>{busy ? 'регистрируем…' : 'зарегистрироваться'}</Button>
         </form>

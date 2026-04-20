@@ -69,3 +69,17 @@ type Slot struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
 }
+
+// ClientSummary carries the bare minimum of client info the admin needs to see
+// next to a booking (avoids a separate user lookup from the UI).
+type ClientSummary struct {
+	ID       uuid.UUID `json:"id"`
+	FullName string    `json:"full_name"`
+	Email    string    `json:"email"`
+	Phone    *string   `json:"phone,omitempty"`
+}
+
+type BookingWithClient struct {
+	Booking
+	Client ClientSummary `json:"client"`
+}

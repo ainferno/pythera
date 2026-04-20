@@ -33,12 +33,12 @@ func (h *AdminHandler) ListBookings(c echo.Context) error {
 		st := models.BookingStatus(s)
 		status = &st
 	}
-	list, err := h.bookingsRepo.ListByAdmin(c.Request().Context(), uid, status)
+	list, err := h.bookingsRepo.ListByAdminWithClient(c.Request().Context(), uid, status)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	if list == nil {
-		list = []models.Booking{}
+		list = []models.BookingWithClient{}
 	}
 	return c.JSON(http.StatusOK, list)
 }

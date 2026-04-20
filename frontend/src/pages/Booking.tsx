@@ -1,42 +1,83 @@
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
 import { bookingsApi } from '../api/bookings';
-import { Button, Card, Container, SectionTitle } from '../components/ui';
+import type { Slot } from '../api/types';
+import { ApiError } from '../api/client';
+import { Card, Container, SectionTitle, Status } from '../components/ui';
+import { BookingCalendar, BookingForm, TimeList } from '../components/booking';
+import { clinicDateKey, clinicLongDate, localDateKey } from '../lib/clinic-tz';
 
-function fmt(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleString('ru-RU', {
-    weekday: 'short',
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+type Feedback = { kind: 'success' | 'error' | 'info'; text: string } | null;
 
 export default function Booking() {
   const qc = useQueryClient();
+  const [selectedDay, setSelectedDay] = useState<Date | undefined>(undefined);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
-  const [selected, setSelected] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Feedback>(null);
 
-  const slots = useQuery({
+  const slotsQuery = useQuery({
     queryKey: ['slots'],
     queryFn: () => bookingsApi.listSlots(),
   });
 
+  // Group slots by clinic-TZ date; first render auto-selects the nearest day.
+  const { slotsByDay, datesWithSlots, firstDayWithSlots } = useMemo(() => {
+    const map = new Map<string, Slot[]>();
+    for (const s of slotsQuery.data ?? []) {
+      const key = clinicDateKey(s.start);
+      const arr = map.get(key);
+      if (arr) arr.push(s);
+      else map.set(key, [s]);
+    }
+    const keys = [...map.keys()].sort();
+    const first = keys[0] ? parseDateKey(keys[0]) : undefined;
+    return {
+      slotsByDay: map,
+      datesWithSlots: new Set(keys),
+      firstDayWithSlots: first,
+    };
+  }, [slotsQuery.data]);
+
+  const activeDay = selectedDay ?? firstDayWithSlots;
+  const dayKey = activeDay ? localDateKey(activeDay) : null;
+  const slotsForDay = dayKey ? slotsByDay.get(dayKey) ?? [] : [];
+
   const book = useMutation({
     mutationFn: (slot: string) => bookingsApi.create(slot, notes || undefined),
     onSuccess: () => {
-      setSelected(null);
+      setSelectedSlot(null);
       setNotes('');
       qc.invalidateQueries({ queryKey: ['slots'] });
       qc.invalidateQueries({ queryKey: ['my-bookings'] });
-      alert('Заявка отправлена. Психолог подтвердит запись по email.');
+      setFeedback({
+        kind: 'success',
+        text: 'Заявка отправлена. Психолог подтвердит запись, вы получите письмо.',
+      });
     },
-    onError: (e: Error) => alert(`Ошибка: ${e.message}`),
+    onError: (e) => {
+      if (e instanceof ApiError && e.status === 409) {
+        setSelectedSlot(null);
+        qc.invalidateQueries({ queryKey: ['slots'] });
+        setFeedback({
+          kind: 'error',
+          text: 'Этот слот только что заняли. Выберите другое время.',
+        });
+      } else {
+        setFeedback({
+          kind: 'error',
+          text: e instanceof Error ? e.message : 'Не удалось отправить заявку',
+        });
+      }
+    },
   });
 
-  const list = slots.data ?? [];
+  const today = useMemo(() => new Date(), []);
+  const lookahead = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 60);
+    return d;
+  }, []);
 
   return (
     <Container className="py-10 md:py-16 flex flex-col gap-8">
@@ -46,66 +87,83 @@ export default function Booking() {
         subtitle="после заявки психолог подтвердит запись — вы получите письмо с деталями."
       />
 
-      {slots.isLoading && <p className="text-[var(--color-muted)]">загружаем слоты…</p>}
-      {slots.isError && <p className="text-[var(--color-accent)]">не удалось загрузить слоты</p>}
+      {slotsQuery.isLoading && <p className="text-[var(--color-muted)]">загружаем расписание…</p>}
+      {slotsQuery.isError && (
+        <Status kind="error">Не удалось загрузить расписание. Попробуйте обновить страницу.</Status>
+      )}
 
-      {!slots.isLoading && list.length === 0 && (
+      {!slotsQuery.isLoading && !slotsQuery.isError && datesWithSlots.size === 0 && (
         <Card className="text-[var(--color-muted)]">
-          Сейчас нет свободных слотов. Загляните позже — расписание обновляется.
+          Сейчас нет свободных слотов. Загляните позже — расписание регулярно обновляется.
         </Card>
       )}
 
-      {list.length > 0 && (
-        <div className="grid gap-8 md:grid-cols-[1fr_320px] items-start">
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {list.map((s) => {
-              const active = selected === s.start;
-              return (
-                <li key={s.start}>
-                  <button
-                    type="button"
-                    onClick={() => setSelected(s.start)}
-                    className={
-                      'w-full text-left px-4 h-12 rounded-xl border transition ' +
-                      (active
-                        ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5'
-                        : 'border-[var(--color-line)] bg-[var(--color-surface)] hover:border-[var(--color-ink)]/30')
-                    }
-                    aria-pressed={active}
-                  >
-                    {fmt(s.start)}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+      {datesWithSlots.size > 0 && (
+        <div className="grid gap-8 md:grid-cols-[auto_1fr] items-start">
+          <Card className="p-3 md:p-4">
+            <BookingCalendar
+              selected={activeDay}
+              onSelect={(d) => {
+                setSelectedDay(d);
+                setSelectedSlot(null);
+                setFeedback(null);
+              }}
+              datesWithSlots={datesWithSlots}
+              minDate={today}
+              maxDate={lookahead}
+            />
+          </Card>
 
-          <Card className="md:sticky md:top-24 flex flex-col gap-4">
-            <div className="text-sm text-[var(--color-muted)]">выбран слот</div>
-            <div className="text-lg font-medium min-h-7">
-              {selected ? fmt(selected) : '—'}
+          <div className="flex flex-col gap-6">
+            <div>
+              <div className="text-xs uppercase tracking-[0.14em] text-[var(--color-muted)] mb-2">
+                доступное время
+              </div>
+              {activeDay ? (
+                <>
+                  <div className="text-lg font-medium mb-3 lowercase">
+                    {clinicLongDate(activeDay)}
+                  </div>
+                  <TimeList
+                    slots={slotsForDay}
+                    selected={selectedSlot}
+                    onPick={(iso) => {
+                      setSelectedSlot(iso);
+                      setFeedback(null);
+                    }}
+                  />
+                </>
+              ) : (
+                <p className="text-sm text-[var(--color-muted)]">
+                  Выберите день в календаре.
+                </p>
+              )}
             </div>
 
-            <label className="flex flex-col gap-1.5">
-              <span className="text-sm text-[var(--color-muted)]">комментарий (необязательно)</span>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={4}
-                placeholder="коротко — что происходит, чего ждёте от встречи"
-                className="p-3 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] focus:border-[var(--color-accent)] outline-none resize-none"
+            <Card>
+              <BookingForm
+                selectedSlot={selectedSlot}
+                notes={notes}
+                onNotesChange={setNotes}
+                onSubmit={() => selectedSlot && book.mutate(selectedSlot)}
+                pending={book.isPending}
+                status={
+                  feedback && (
+                    <Status kind={feedback.kind} onClose={() => setFeedback(null)}>
+                      {feedback.text}
+                    </Status>
+                  )
+                }
               />
-            </label>
-
-            <Button
-              disabled={!selected || book.isPending}
-              onClick={() => selected && book.mutate(selected)}
-            >
-              {book.isPending ? 'отправляем…' : 'записаться'}
-            </Button>
-          </Card>
+            </Card>
+          </div>
         </div>
       )}
     </Container>
   );
+}
+
+function parseDateKey(key: string): Date {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
 }

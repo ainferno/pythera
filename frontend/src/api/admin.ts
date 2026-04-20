@@ -1,9 +1,15 @@
 import { api } from './client';
-import type { Booking, BookingStatus, ScheduleBlock, ScheduleTemplate } from './types';
+import type {
+  AdminBooking,
+  Booking,
+  BookingStatus,
+  ScheduleBlock,
+  ScheduleTemplate,
+} from './types';
 
 export const adminApi = {
   listBookings: (status?: BookingStatus) =>
-    api<Booking[]>(`/admin/bookings${status ? `?status=${status}` : ''}`),
+    api<AdminBooking[]>(`/admin/bookings${status ? `?status=${status}` : ''}`),
 
   confirmBooking: (id: string, admin_notes?: string) =>
     api<Booking>(`/admin/bookings/${id}/confirm`, {

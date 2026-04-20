@@ -30,6 +30,17 @@ export interface Slot {
   end: string;
 }
 
+export interface ClientSummary {
+  id: string;
+  full_name: string;
+  email: string;
+  phone?: string | null;
+}
+
+export interface AdminBooking extends Booking {
+  client: ClientSummary;
+}
+
 export interface ScheduleTemplate {
   id: string;
   admin_id: string;

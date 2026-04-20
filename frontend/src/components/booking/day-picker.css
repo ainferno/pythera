@@ -1,0 +1,63 @@
+@import "react-day-picker/style.css";
+
+@layer components {
+  .rdp-root {
+    --rdp-accent-color: var(--color-accent);
+    --rdp-accent-background-color: color-mix(in oklab, var(--color-accent) 10%, transparent);
+    --rdp-background-color: var(--color-surface);
+    --rdp-today-color: var(--color-accent);
+    --rdp-range_middle-background-color: color-mix(in oklab, var(--color-accent) 10%, transparent);
+    --rdp-day-height: 40px;
+    --rdp-day-width: 40px;
+    --rdp-day_button-height: 40px;
+    --rdp-day_button-width: 40px;
+    --rdp-day_button-border-radius: 12px;
+    --rdp-weekday-opacity: 1;
+    --rdp-weekday-padding: 8px 0;
+    --rdp-weekday-text-align: center;
+    --rdp-months-gap: 16px;
+
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+  }
+
+  .rdp-month_caption {
+    font-weight: 500;
+    font-size: 1rem;
+    text-transform: lowercase;
+  }
+
+  .rdp-weekday {
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    text-transform: lowercase;
+    font-weight: 500;
+  }
+
+  .rdp-day_button:hover:not([disabled]) {
+    background: var(--rdp-accent-background-color);
+  }
+
+  /* Days that have available slots — small dot under the number. */
+  .rdp-day.has-slots .rdp-day_button {
+    position: relative;
+  }
+  .rdp-day.has-slots .rdp-day_button::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    width: 4px;
+    height: 4px;
+    border-radius: 9999px;
+    transform: translateX(-50%);
+    background: var(--color-accent);
+  }
+  .rdp-day.has-slots.rdp-selected .rdp-day_button::after {
+    background: var(--color-accent-ink);
+  }
+
+  .rdp-day_button:disabled {
+    color: color-mix(in oklab, var(--color-muted) 50%, transparent);
+  }
+}

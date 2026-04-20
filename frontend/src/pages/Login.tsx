@@ -2,7 +2,7 @@ import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Button, Card, Container } from '../components/ui';
+import { Button, Card, Container, Status } from '../components/ui';
 
 export default function Login() {
   const { login } = useAuth();
@@ -62,7 +62,7 @@ export default function Login() {
             />
           </label>
 
-          {err && <div className="text-sm text-[var(--color-accent)]">{err}</div>}
+          {err && <Status kind="error" onClose={() => setErr(null)}>{err}</Status>}
 
           <Button disabled={busy}>{busy ? 'входим…' : 'войти'}</Button>
         </form>

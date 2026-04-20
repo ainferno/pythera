@@ -75,6 +75,9 @@ func (r *BookingRepo) ListByClient(ctx context.Context, clientID uuid.UUID) ([]m
 	return scanBookings(rows)
 }
 
+// Deprecated: use ListByAdminWithClient for admin-facing reads so the UI
+// can show the client identity. Kept for future internal consumers (e.g. the
+// planned Telegram bot) that don't need the JOIN.
 func (r *BookingRepo) ListByAdmin(ctx context.Context, adminID uuid.UUID, status *models.BookingStatus) ([]models.Booking, error) {
 	q := `SELECT ` + bookingCols + ` FROM bookings WHERE admin_id=$1`
 	args := []any{adminID}
@@ -89,6 +92,41 @@ func (r *BookingRepo) ListByAdmin(ctx context.Context, adminID uuid.UUID, status
 	}
 	defer rows.Close()
 	return scanBookings(rows)
+}
+
+func (r *BookingRepo) ListByAdminWithClient(ctx context.Context, adminID uuid.UUID, status *models.BookingStatus) ([]models.BookingWithClient, error) {
+	q := `
+        SELECT b.id, b.client_id, b.admin_id, b.slot_start, b.slot_end, b.status,
+               b.client_notes, b.admin_notes, b.created_at, b.updated_at,
+               u.id, u.full_name, u.email, u.phone
+        FROM bookings b
+        JOIN users    u ON u.id = b.client_id
+        WHERE b.admin_id = $1`
+	args := []any{adminID}
+	if status != nil {
+		q += ` AND b.status = $2`
+		args = append(args, *status)
+	}
+	q += ` ORDER BY b.slot_start`
+	rows, err := r.db.Query(ctx, q, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []models.BookingWithClient
+	for rows.Next() {
+		var b models.BookingWithClient
+		if err := rows.Scan(
+			&b.ID, &b.ClientID, &b.AdminID, &b.SlotStart, &b.SlotEnd, &b.Status,
+			&b.ClientNotes, &b.AdminNotes, &b.CreatedAt, &b.UpdatedAt,
+			&b.Client.ID, &b.Client.FullName, &b.Client.Email, &b.Client.Phone,
+		); err != nil {
+			return nil, err
+		}
+		out = append(out, b)
+	}
+	return out, rows.Err()
 }
 
 func (r *BookingRepo) UpdateStatus(ctx context.Context, id uuid.UUID, status models.BookingStatus, adminNotes *string) error {
