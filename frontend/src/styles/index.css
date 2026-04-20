@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg:         #FAF7F2;
+  --color-surface:    #FFFFFF;
+  --color-ink:        #1A1A1A;
+  --color-muted:      #6E6A63;
+  --color-line:       #E7E1D6;
+  --color-accent:     #C65A3A;
+  --color-accent-hover: #AF4A2E;
+  --color-accent-ink: #FFFFFF;
+
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-xl:  14px;
+  --radius-2xl: 20px;
+
+  --container-prose: 65ch;
+  --container-max:   1120px;
+}
+
+@layer base {
+  html {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body { min-height: 100dvh; }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 35%, transparent);
+    border-radius: 4px;
+  }
+
+  h1, h2, h3, h4 { text-wrap: balance; }
+  p             { text-wrap: pretty; }
+
+  /* Skip link — hidden until focused */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+  }
+  .skip-link:focus {
+    left: 1rem;
+    top: 1rem;
+    z-index: 100;
+    background: var(--color-ink);
+    color: var(--color-bg);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+  }
+}

@@ -1,13 +1,23 @@
-import { Link } from 'react-router-dom';
+import {
+  About,
+  ContactCTA,
+  FAQ,
+  Hero,
+  HowItWorks,
+  Issues,
+  Pricing,
+} from '../components/landing';
 
 export default function Home() {
   return (
-    <div>
-      <h1>Психолог — индивидуальные консультации</h1>
-      <p>Здесь будет информация о психологе, подход, образование и отзывы (дизайн оформит дизайнер).</p>
-      <p>
-        <Link to="/booking">Записаться на приём →</Link>
-      </p>
-    </div>
+    <>
+      <Hero />
+      <Issues />
+      <HowItWorks />
+      <Pricing />
+      <About />
+      <FAQ />
+      <ContactCTA />
+    </>
   );
 }
