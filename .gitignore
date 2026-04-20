@@ -39,3 +39,6 @@ docker-compose.override.yml
 
 # Logs
 *.log
+
+# Local-only planning doc
+PLAN.md
