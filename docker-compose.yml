@@ -50,7 +50,9 @@ services:
     build:
       context: ./frontend
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+        # Use `-` (not `:-`) so an explicitly empty value is passed through.
+        # Empty means the SPA uses relative /api paths, nginx proxies to backend.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL-}
     restart: unless-stopped
     ports:
       - "5173:80"
